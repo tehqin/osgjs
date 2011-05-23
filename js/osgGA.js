@@ -312,6 +312,9 @@ osgGA.FirstPersonManipulator.prototype = {
         this.direction = [0.0, 1.0, 0.0];
         this.angleVertical = 0.0;
         this.angleHorizontal = 0.0;
+        this.maxVerticalBound = Math.PI/2;
+        this.minVerticalBound = -Math.PI/2;
+        this.isVerticallyBound = true;
         this.eye = [0, 25.0, 0.0];
         this.up = [0, 0, 1];
         this.time = 0.0;
@@ -405,6 +408,17 @@ osgGA.FirstPersonManipulator.prototype = {
     {
         this.angleVertical += dy*0.01;
         this.angleHorizontal -= dx*0.01;
+        
+        console.log("ANGLE "+this.angleVertical);
+
+        // Bind the vertical angle so we can't look upside down
+        if (this.isVerticallyBound)
+        {
+            if (this.angleVertical > this.maxVerticalBound) 
+                this.angleVertical = this.maxVerticalBound;
+            else if (this.angleVertical < this.minVerticalBound)
+                this.angleVertical = this.minVerticalBound;
+        }
 
         var first = osg.Matrix.makeRotate(this.angleVertical, 1, 0, 0);
         var second = osg.Matrix.makeRotate(this.angleHorizontal, 0, 0, 1);
