@@ -546,6 +546,11 @@ osgViewer.Viewer.prototype = {
             if (viewer.getManipulator().keyup) {
                 this.eventNode.addEventListener("keyup", keyup, false);
             }
+            if (manipulator.keyup !== undefined) {
+                jQuery(this.eventNode).bind({'keyup': function(event) {
+                    return manipulator.keyup(event);
+                }});
+            }
         }
     }
 };
