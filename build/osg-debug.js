@@ -1,4 +1,4 @@
-// osg-debug-0.0.4.js commit e3aff89aa5785a9980a5aa074cbc195401f4139b - http://github.com/cedricpinson/osgjs
+// osg-debug-0.0.4.js commit 33c6d764929f272968c9fc5f6604bf317ee1b1d3 - http://github.com/cedricpinson/osgjs
 var osg = {};
 
 osg.version = '0.0.4';
@@ -6582,6 +6582,13 @@ osgDB.parseSceneGraph = function (node)
         newnode.setProjectionMatrix(osg.Matrix.copy(node.projection));
         node = newnode;
     }
+    
+    // not working yet
+//    if (node.doftransform){
+//        newnode = new osgSim.DOFTransform(node.doftransform);
+//        jQuery.extend(newnode, node);
+//        node = newnode;
+//    }
 
     // default type
     if (node.objectType === undefined) {
@@ -7420,6 +7427,11 @@ osgViewer.Viewer.prototype = {
             if (viewer.getManipulator().keyup) {
                 this.eventNode.addEventListener("keyup", keyup, false);
             }
+            if (manipulator.keyup !== undefined) {
+                jQuery(this.eventNode).bind({'keyup': function(event) {
+                    return manipulator.keyup(event);
+                }});
+            }
         }
     }
 };
@@ -7741,6 +7753,7 @@ osgGA.OrbitManipulator.prototype = {
     }
 };
 
+
 /** -*- compile-command: "jslint-cli FirstPersonManipulator.js" -*-
  * Authors:
  *  Matt Fontaine <tehqin@gmail.com>
@@ -7766,9 +7779,15 @@ osgGA.FirstPersonManipulator.prototype = {
         this.direction = [0.0, 1.0, 0.0];
         this.angleVertical = 0.0;
         this.angleHorizontal = 0.0;
+        this.maxVerticalBound = Math.PI/2;
+        this.minVerticalBound = -Math.PI/2;
+        this.isVerticallyBound = true;
         this.eye = [0, 25.0, 10.0];
         this.up = [0, 0, 1];
         this.time = 0.0;
+        this.velocity = 5.0;
+        this.acceleration = 0.0;
+        this.maxVelocity = 40.0;
         this.buttonup = true;
     },
     reset: function()
@@ -7828,10 +7847,43 @@ osgGA.FirstPersonManipulator.prototype = {
         this.dx = this.dy = 0;
         this.buttonup = false;
     },
+    setVelocity: function(vel)
+    {
+        this.velocity = vel;
+    },
+    getVelocity: function()
+    {
+        return this.velocity;
+    },
+    setAcceleration: function(acc)
+    {
+        this.acceleration = acc;
+    },
+    getAcceleration: function()
+    {
+        return this.acceleration;
+    },
+    setMaxVelocity: function(vel)
+    {
+        this.maxVelocity = vel;
+    },
+    getMaxVelocity: function()
+    {
+        return this.maxVelocity;
+    },
     computeRotation: function(dx, dy)
     {
         this.angleVertical += dy*0.01;
         this.angleHorizontal -= dx*0.01;
+        
+        // Bind the vertical angle so we can't look upside down
+        if (this.isVerticallyBound)
+        {
+            if (this.angleVertical > this.maxVerticalBound)
+                this.angleVertical = this.maxVerticalBound;
+            else if (this.angleVertical < this.minVerticalBound)
+                this.angleVertical = this.minVerticalBound;
+        }
 
         var first = osg.Matrix.makeRotate(this.angleVertical, 1, 0, 0);
         var second = osg.Matrix.makeRotate(this.angleHorizontal, 0, 0, 1);
@@ -7854,38 +7906,41 @@ osgGA.FirstPersonManipulator.prototype = {
     },
     getInverseMatrix: function()
     {
-        var target = osg.Vec3.add(this.eye, this.direction);
+        var target = osg.Vec3.add(this.eye, this.direction, []);
         return osg.Matrix.makeLookAt(this.eye, target, this.up);
     },
     moveForward: function(distance)
     {
-        var d = osg.Vec3.mult(osg.Vec3.normalize(this.direction), distance);
-        this.eye = osg.Vec3.add(this.eye, d);
+        var d = [0,0,0];
+        var nv = [0,0,0];
+        osg.Vec3.normalize(this.direction, nv);
+        osg.Vec3.mult(osg.Vec3.normalize(this.direction,[0,0,0]),distance,d);
+        osg.Vec3.add(this.eye, d, this.eye);
     },
-    strafe: function(distance)
+    moveRight: function(distance)
     {
-        var cx = osg.Vec3.cross(this.direction, this.up);
-        var d = osg.Vec3.mult(osg.Vec3.normalize(cx), distance);
-        this.eye = osg.Vec3.add(this.eye, d);
+        var cx = osg.Vec3.cross(this.direction,this.up,[0,0,0]);
+        var d = osg.Vec3.mult(osg.Vec3.normalize(cx,[0,0,0]), distance,[0,0,0]);
+        this.eye = osg.Vec3.add(this.eye, d, [0,0,0]);
     },
     
     keydown: function(event) {
         if (event.keyCode === 32) {
             this.computeHomePosition();
         } else if (event.keyCode == 87){ // W
-            this.moveForward(5.0);
+            this.moveForward(this.velocity);
             return false;
         }
         else if (event.keyCode == 83){ // S
-            this.moveForward(-5.0);
+            this.moveForward(-this.velocity);
             return false;
         }
         else if (event.keyCode == 68){ // D
-            this.strafe(5.0);
+            this.moveRight(this.velocity);
             return false;
         }
         else if (event.keyCode == 65){ // A
-            this.strafe(-5.0);
+            this.moveRight(-this.velocity);
             return false;
         }
     }
