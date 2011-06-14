@@ -156,8 +156,6 @@ osgGA.FirstPersonManipulator.prototype = {
     moveForward: function(distance)
     {
         var d = [0,0,0];
-        var nv = [0,0,0];
-        osg.Vec3.normalize(this.direction, nv);
         osg.Vec3.mult(osg.Vec3.normalize(this.direction,[0,0,0]),distance,d);
         osg.Vec3.add(this.eye, d, this.eye);
     },
