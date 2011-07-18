@@ -407,7 +407,7 @@ osgViewer.Viewer.prototype = {
 	    return event;
 	};
 
-        this.manipulator.convertEventToCanvas = function(e) {
+       this.manipulator.convertEventToCanvas = function(e) {
             var myObject = that.canvas;
             var posx,posy;
 	    if (e.pageX || e.pageY) {
