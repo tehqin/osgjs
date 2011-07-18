@@ -4,12 +4,12 @@
  */
 
 
-osgViewer.Viewer = function(canvas, options) {
+osgViewer.Viewer = function(canvas, options, error) {
     if (options === undefined) {
         options = {antialias : true};
     }
 
-    gl = WebGLUtils.setupWebGL(canvas, options );
+    gl = WebGLUtils.setupWebGL(canvas, options, error );
     if (gl) {
         this.gl = gl;
         osg.init();
@@ -20,9 +20,18 @@ osgViewer.Viewer = function(canvas, options) {
         this.urlOptions = true;
 
         this.mouseWheelEventNode = canvas;
-        this.eventNode = document;
-        if (options && options.mouseWheelEventNode) {
-            this.mouseWheelEventNode = options.mouseWheelEventNode;
+        this.mouseEventNode = canvas;
+        this.keyboardEventNode = document;
+        if (options) {
+            if(options.mouseWheelEventNode){
+                this.mouseWheelEventNode = options.mouseWheelEventNode;
+            }
+            if(options.mouseEventNode){
+                this.mouseEventNode = options.mouseEventNode;
+            }
+            if(options.mouseWheelEventNode){
+                this.keyboardEventNode = options.keyboardEventNode;
+            }
         }
 
     } else {
@@ -40,6 +49,7 @@ osgViewer.Viewer.prototype = {
     },
 
     init: function() {
+        this._done = false;
         this.root = new osg.Node();
         this.state = new osg.State();
         this.view = new osg.View();
@@ -123,7 +133,7 @@ osgViewer.Viewer.prototype = {
 
         var createDomElements = function (elementToAppend) {
             var dom = [
-                "<div id='StatsDiv' style='float: left; position: relative; width: 300px; height: 150; z-index: 10;'>",
+                "<div id='StatsDiv' style='float: left; position: relative; width: 300px; height: 150px; z-index: 10;'>",
                 "<div id='StatsLegends' style='position: absolute; left: 0px; font-size: " + fontsize +"px;color: #ffffff;'>",
 
                 "<div id='frameRate' style='color: #00ff00;' > frameRate </div>",
@@ -322,11 +332,16 @@ osgViewer.Viewer.prototype = {
         }
     },
 
+    setDone: function() { this._done = true; },
+    done: function() { return this._done; },
+
     run: function() {
         var that = this;
         var render = function() {
-            window.requestAnimationFrame(render, this.canvas);
-            that.frame();
+            if (!that.done()) {
+                window.requestAnimationFrame(render, that.canvas);
+                that.frame();
+            }
         };
         render();
     },
@@ -521,30 +536,30 @@ osgViewer.Viewer.prototype = {
             };
 
             if (viewer.getManipulator().mousedown) {
-                this.eventNode.addEventListener("mousedown", mousedown, false);
+                this.mouseEventNode.addEventListener("mousedown", mousedown, false);
             }
             if (viewer.getManipulator().mouseup) {
-                this.eventNode.addEventListener("mouseup", mouseup, false);
+                this.mouseEventNode.addEventListener("mouseup", mouseup, false);
             }
             if (viewer.getManipulator().mousemove) {
-                this.eventNode.addEventListener("mousemove", mousemove, false);
+                this.mouseEventNode.addEventListener("mousemove", mousemove, false);
             }
             if (viewer.getManipulator().dblclick) {
-                this.eventNode.addEventListener("dblclick", dblclick, false);
+                this.mouseEventNode.addEventListener("dblclick", dblclick, false);
             }
             if (viewer.getManipulator().mousewheel) {
-                this.canvas.addEventListener("DOMMouseScroll", mousewheel, false);
-                this.canvas.addEventListener("mousewheel", mousewheel, false);
+                this.mouseWheelEventNode.addEventListener("DOMMouseScroll", mousewheel, false);
+                this.mouseWheelEventNode.addEventListener("mousewheel", mousewheel, false);
             }
 
             var keydown = function(ev) {return viewer.getManipulator().keydown(ev); };
             var keyup = function(ev) {return viewer.getManipulator().keyup(ev);};
 
             if (viewer.getManipulator().keydown) {
-                this.eventNode.addEventListener("keydown", keydown, false);
+                this.keyboardEventNode.addEventListener("keydown", keydown, false);
             }
             if (viewer.getManipulator().keyup) {
-                this.eventNode.addEventListener("keyup", keyup, false);
+                this.keyboardEventNode.addEventListener("keyup", keyup, false);
             }
             if (manipulator.keyup !== undefined) {
                 jQuery(this.eventNode).bind({'keyup': function(event) {

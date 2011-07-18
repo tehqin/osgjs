@@ -1,3 +1,7 @@
+/** 
+ * CullVisitor traverse the tree and collect Matrix/State for the rendering traverse 
+ * @class CullVisitor
+ */
 osg.CullVisitor = function () {
     osg.NodeVisitor.call(this);
     osg.CullSettings.call(this);
@@ -26,6 +30,7 @@ osg.CullVisitor = function () {
     this.reserveLeafStack.current = 0;
 };
 
+/** @lends osg.CullVisitor.prototype */
 osg.CullVisitor.prototype = osg.objectInehrit(osg.CullStack.prototype ,osg.objectInehrit(osg.CullSettings.prototype, osg.objectInehrit(osg.NodeVisitor.prototype, {
     distance: function(coord,matrix) {
         return -( coord[0]*matrix[2]+ coord[1]*matrix[6] + coord[2]*matrix[10] + matrix[14]);
@@ -203,8 +208,10 @@ osg.CullVisitor.prototype = osg.objectInehrit(osg.CullStack.prototype ,osg.objec
 })));
 
 osg.CullVisitor.prototype[osg.Camera.prototype.objectType] = function( camera ) {
-    if (camera.stateset) {
-        this.pushStateSet(camera.stateset);
+
+    var stateset = camera.getStateSet();
+    if (stateset) {
+        this.pushStateSet(stateset);
     }
 
     if (camera.light) {
@@ -303,7 +310,7 @@ osg.CullVisitor.prototype[osg.Camera.prototype.objectType] = function( camera ) 
     this.computedNear = previous_znear;
     this.computedFar = previous_zfar;
 
-    if (camera.stateset) {
+    if (stateset) {
         this.popStateSet();
     }
 
@@ -318,8 +325,9 @@ osg.CullVisitor.prototype[osg.MatrixTransform.prototype.objectType] = function (
     osg.Matrix.mult(lastMatrixStack, node.getMatrix(), matrix);
     this.pushModelviewMatrix(matrix);
 
-    if (node.stateset) {
-        this.pushStateSet(node.stateset);
+    var stateset = node.getStateSet();
+    if (stateset) {
+        this.pushStateSet(stateset);
     }
 
     if (node.light) {
@@ -330,7 +338,7 @@ osg.CullVisitor.prototype[osg.MatrixTransform.prototype.objectType] = function (
         this.traverse(node);
     }
 
-    if (node.stateset) {
+    if (stateset) {
         this.popStateSet();
     }
     
@@ -344,15 +352,17 @@ osg.CullVisitor.prototype[osg.Projection.prototype.objectType] = function (node)
     osg.Matrix.mult(lastMatrixStack, node.getProjectionMatrix(), matrix);
     this.pushProjectionMatrix(matrix);
 
-    if (node.stateset) {
-        this.pushStateSet(node.stateset);
+    var stateset = node.getStateSet();
+
+    if (stateset) {
+        this.pushStateSet(stateset);
     }
 
     if (node.traverse) {
         this.traverse(node);
     }
 
-    if (node.stateset) {
+    if (stateset) {
         this.popStateSet();
     }
 
@@ -361,8 +371,9 @@ osg.CullVisitor.prototype[osg.Projection.prototype.objectType] = function (node)
 
 osg.CullVisitor.prototype[osg.Node.prototype.objectType] = function (node) {
 
-    if (node.stateset) {
-        this.pushStateSet(node.stateset);
+    var stateset = node.getStateSet();
+    if (stateset) {
+        this.pushStateSet(stateset);
     }
     if (node.light) {
         this.addPositionedAttribute(node.light);
@@ -372,7 +383,7 @@ osg.CullVisitor.prototype[osg.Node.prototype.objectType] = function (node) {
         this.traverse(node);
     }
 
-    if (node.stateset) {
+    if (stateset) {
         this.popStateSet();
     }
 };
@@ -385,8 +396,9 @@ osg.CullVisitor.prototype[osg.Geometry.prototype.objectType] = function (node) {
         }
     }
 
-    if (node.stateset) {
-        this.pushStateSet(node.stateset);
+    var stateset = node.getStateSet();
+    if (stateset) {
+        this.pushStateSet(stateset);
     }
 
     var leafs = this.currentStateGraph.leafs;
@@ -401,7 +413,7 @@ osg.CullVisitor.prototype[osg.Geometry.prototype.objectType] = function (node) {
     leaf.geometry = node;
     leafs.push(leaf);
 
-    if (node.stateset) {
+    if (stateset) {
         this.popStateSet();
     }
 };

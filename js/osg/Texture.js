@@ -27,6 +27,7 @@ osg.Texture.prototype = osg.objectInehrit(osg.StateAttribute.prototype, {
 
             osg.Texture.uniforms[unit] = uniforms;
         }
+        // uniform for an texture attribute should directly in osg.Texture.uniforms[unit] and not in osg.Texture.uniforms[unit][Texture0]
         return osg.Texture.uniforms[unit];
     },
     setDefaultParameters: function() {
@@ -101,6 +102,8 @@ osg.Texture.prototype = osg.objectInehrit(osg.StateAttribute.prototype, {
                 if (this.isImageReady()) {
                     if (!this.textureObject) {
                         this.init();
+                        this.setTextureSize(this.image.naturalWidth, this.image.naturalHeight);
+                        this._dirty = false;
                     }
                     gl.bindTexture(gl.TEXTURE_2D, this.textureObject);
                     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, this.image);
@@ -137,10 +140,10 @@ osg.Texture.prototype = osg.objectInehrit(osg.StateAttribute.prototype, {
       };
       setShaderGeneratorFunction(fragmentGenerator, osg.ShaderGeneratorType.FragmentMain);
 
-      @param {function:(unit)} injectionFunction
-      @param {osg.ShaderGeneratorType} injectionType
     */
-    setShaderGeneratorFunction: function(injectionFunction, mode) {
+    setShaderGeneratorFunction: function(
+        /**Function*/ injectionFunction, 
+        /**osg.ShaderGeneratorType*/ mode) {
         this[mode] = injectionFunction;
     },
 
@@ -171,7 +174,8 @@ osg.Texture.prototype[osg.ShaderGeneratorType.FragmentMain] = function(unit) {
     return str;
 };
 
-osg.Texture.create = function(imageSource) {
+
+osg.Texture.createFromURL = function(imageSource) {
     var a = new osg.Texture();
     if (imageSource !== undefined) {
         var img = new Image();
@@ -189,4 +193,9 @@ osg.Texture.createFromCanvas = function(ctx) {
     var a = new osg.Texture();
     a.setFromCanvas(ctx);
     return a;
+};
+
+osg.Texture.create = function(url) {
+    osg.log("osg.Texture.create is deprecated, use osg.Texture.createFromURL instead");
+    return osg.Texture.createFromURL(url);
 };

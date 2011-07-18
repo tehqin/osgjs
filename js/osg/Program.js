@@ -1,16 +1,26 @@
-osg.Program = function () { 
+/** 
+ * Program encapsulate an vertex and fragment shader
+ * @class Program
+ */
+osg.Program = function (vShader, fShader) { 
     if (osg.Program.instanceID === undefined) {
         osg.Program.instanceID = 0;
     }
     this.instanceID = osg.Program.instanceID;
     this._dirty = true;
     osg.Program.instanceID+= 1;
+
+    this.program = null;
+    this.vertex = vShader;
+    this.fragment = fShader;
+    this.dirty = true;
 };
 
+/** @lends osg.Program.prototype */
 osg.Program.prototype = {
     isDirty: function() { return this._dirty; },
     attributeType: "Program",
-    cloneType: function() { var p = osg.Program.create(); p.default_program = true; return p; },
+    cloneType: function() { var p = new osg.Program(); p.default_program = true; return p; },
     getType: function() { return this.attributeType;},
     getTypeMember: function() { return this.attributeType;},
     setVertexShader: function(vs) { program.vertex = vs; },
@@ -60,12 +70,12 @@ osg.Program.prototype = {
     cacheUniformList: function(str) {
         var r = str.match(/uniform\s+\w+\s+\w+/g);
         if (r !== null) {
-            for (var i in r) {
+            for (var i = 0, l = r.length; i < l; i++) {
                 var uniform = r[i].match(/uniform\s+\w+\s+(\w+)/)[1];
-                var l = gl.getUniformLocation(this.program, uniform);
-                if (l !== undefined && l !== null) {
+                var location = gl.getUniformLocation(this.program, uniform);
+                if (location !== undefined && location !== null) {
                     if (this.uniformsCache[uniform] === undefined) {
-                        this.uniformsCache[uniform] = l;
+                        this.uniformsCache[uniform] = location;
                         this.uniformsCache.uniformKeys.push(uniform);
                     }
                 }
@@ -76,12 +86,12 @@ osg.Program.prototype = {
     cacheAttributeList: function(str) {
         var r = str.match(/attribute\s+\w+\s+\w+/g);
         if (r !== null) {
-            for (var i in r) {
+            for (var i = 0, l = r.length; i < l; i++) {
                 var attr = r[i].match(/attribute\s+\w+\s+(\w+)/)[1];
-                var l = gl.getAttribLocation(this.program, attr);
-                if (l !== -1 && l !== undefined) {
+                var location = gl.getAttribLocation(this.program, attr);
+                if (location !== -1 && location !== undefined) {
                     if (this.attributesCache[attr] === undefined) {
-                        this.attributesCache[attr] = l;
+                        this.attributesCache[attr] = location;
                         this.attributesCache.attributeKeys.push(attr);
                     }
                 }
@@ -93,10 +103,7 @@ osg.Program.prototype = {
 };
 
 osg.Program.create = function(vShader, fShader) {
-    var program = new osg.Program();
-    program.program = null;
-    program.vertex = vShader;
-    program.fragment = fShader;
-    program.dirty = true;
+    console.log("osg.Program.create is deprecated use new osg.Program(vertex, fragment) instead");
+    var program = new osg.Program(vShader, fShader);
     return program;
 };

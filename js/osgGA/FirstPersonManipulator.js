@@ -54,10 +54,7 @@ osgGA.FirstPersonManipulator.prototype = {
     },
     mousemove: function(ev)
     {
-        if (this.buttonup === true)
-        {
-            return;
-        }
+        if (this.buttonup === true) { return; }
         
         var curX;
         var curY;
@@ -152,19 +149,18 @@ osgGA.FirstPersonManipulator.prototype = {
     getInverseMatrix: function()
     {
         var target = osg.Vec3.add(this.eye, this.direction, []);
-        return osg.Matrix.makeLookAt(this.eye, target, this.up);
+        return osg.Matrix.makeLookAt(this.eye, target, this.up, []);
     },
     moveForward: function(distance)
     {
-        var d = [0,0,0];
-        osg.Vec3.mult(osg.Vec3.normalize(this.direction,[0,0,0]),distance,d);
-        osg.Vec3.add(this.eye, d, this.eye);
+        var d = osg.Vec3.mult(osg.Vec3.normalize(this.direction, []), distance, []);
+        this.eye = osg.Vec3.add(this.eye, d, []);
     },
     moveRight: function(distance)
     {
-        var cx = osg.Vec3.cross(this.direction,this.up,[0,0,0]);
-        var d = osg.Vec3.mult(osg.Vec3.normalize(cx,[0,0,0]), distance,[0,0,0]);
-        this.eye = osg.Vec3.add(this.eye, d, [0,0,0]);
+        var cx = osg.Vec3.cross(this.direction, this.up, []);
+        var d = osg.Vec3.mult(osg.Vec3.normalize(cx,cx), distance, []);
+        this.eye = osg.Vec3.add(this.eye, d, []);
     },
     
     keydown: function(event) {
