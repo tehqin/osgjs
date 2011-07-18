@@ -33,6 +33,7 @@ osgGA.FirstPersonManipulator.prototype = {
         this.acceleration = 0.0;
         this.maxVelocity = 40.0;
         this.buttonup = true;
+        this.dragging = true;
     },
     reset: function()
     {
@@ -40,8 +41,8 @@ osgGA.FirstPersonManipulator.prototype = {
     },
     mouseup: function(ev)
     {
-        this.dragging = false;
-        this.releaseButton(ev);
+        //this.dragging = false;
+        //this.releaseButton(ev);
     },
     mousedown: function(ev)
     {
@@ -57,7 +58,7 @@ osgGA.FirstPersonManipulator.prototype = {
         {
             return;
         }
-
+        
         var curX;
         var curY;
         var deltaX;
